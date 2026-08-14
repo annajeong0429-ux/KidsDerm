@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogoMark, Wordmark, CheckIcon } from "@/components/icons";
+import { ApiError, useAuth } from "@/lib/auth-context";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
 function KakaoIcon() {
   return (
@@ -18,7 +21,26 @@ function KakaoIcon() {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [autoLogin, setAutoLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await login(email, password);
+      router.push("/");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.detail : "로그인에 실패했어요. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="flex h-full flex-col items-center justify-center bg-canvas px-4">
@@ -28,18 +50,14 @@ export default function LoginPage() {
           <Wordmark className="text-xl" />
         </div>
 
-        <form
-          className="mt-7 space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            router.push("/");
-          }}
-        >
+        <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="text-sm font-semibold text-foreground">이메일</label>
             <input
               type="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-sm outline-none focus:border-brand-500"
             />
@@ -49,10 +67,14 @@ export default function LoginPage() {
             <input
               type="password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="비밀번호 입력"
               className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-sm outline-none focus:border-brand-500"
             />
           </div>
+
+          {error && <p className="text-xs font-medium text-accent-600">{error}</p>}
 
           <div className="flex items-center justify-between pt-0.5">
             <button
@@ -76,9 +98,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="h-12 w-full rounded-xl bg-brand-600 text-sm font-bold text-white"
+            disabled={submitting}
+            className="h-12 w-full rounded-xl bg-brand-600 text-sm font-bold text-white disabled:opacity-60"
           >
-            로그인
+            {submitting ? "로그인 중..." : "로그인"}
           </button>
         </form>
 
@@ -89,26 +112,26 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-center gap-4">
-          <button
-            onClick={() => router.push("/")}
+          <a
+            href={`${API_BASE}/auth/kakao/login`}
             className="flex h-12 w-12 items-center justify-center rounded-full"
             style={{ backgroundColor: "var(--color-kakao)" }}
           >
             <KakaoIcon />
-          </button>
-          <button
-            onClick={() => router.push("/")}
+          </a>
+          <a
+            href={`${API_BASE}/auth/naver/login`}
             className="flex h-12 w-12 items-center justify-center rounded-full text-base font-bold text-white"
             style={{ backgroundColor: "var(--color-naver)" }}
           >
             N
-          </button>
-          <button
-            onClick={() => router.push("/")}
+          </a>
+          <a
+            href={`${API_BASE}/auth/google/login`}
             className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-white text-base font-bold text-muted"
           >
             G
-          </button>
+          </a>
         </div>
 
         <p className="mt-7 text-center text-sm text-muted">

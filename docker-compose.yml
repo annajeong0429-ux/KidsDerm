@@ -13,6 +13,43 @@ services:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
 
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - ENV=local
+      - SECRET_KEY=dev-only-secret-change-me
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=pw1234
+      - DB_NAME=kidsderm
+      - COOKIE_DOMAIN=localhost
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8
+    environment:
+      - MYSQL_ROOT_PASSWORD=pw1234
+      - MYSQL_DATABASE=kidsderm
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ppw1234"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   node_modules:
   next_cache:
+  mysql_data:
