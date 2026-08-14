@@ -1,69 +1,99 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Card, SectionTitle } from "@/components/ui/Card";
+import { TrendBadge } from "@/components/ui/Badge";
+import { CameraIcon, ChevronRightIcon, MapPinIcon, UserIcon } from "@/components/icons";
+import { cases, currentChild, outbreakEntries, photoRecords } from "@/lib/mock-data";
 
-export default function Home() {
+export default function HomePage() {
+  const activeCases = cases.filter((c) => c.active);
+  const recentPhotos = [...photoRecords].sort((a, b) => (a.takenAt < b.takenAt ? 1 : -1)).slice(0, 3);
+  const risingOutbreaks = outbreakEntries.filter((o) => o.trend === "증가").slice(0, 2);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col px-5 pb-6 pt-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-muted">{currentChild.region.province} {currentChild.region.district}</p>
+          <h1 className="text-lg font-bold text-foreground">{currentChild.name} 보호자님, 안녕하세요</h1>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <Link
+          href="/profile"
+          className="flex h-10 w-10 items-center justify-center rounded-full"
+          style={{ backgroundColor: currentChild.avatarColor }}
+        >
+          <UserIcon className="h-5 w-5 text-white" />
+        </Link>
+      </div>
+
+      <Link
+        href="/record/guide"
+        className="mt-5 flex items-center justify-between rounded-2xl bg-brand-600 px-5 py-4 text-white"
+      >
+        <span>
+          <span className="block text-sm font-semibold">오늘 병변 촬영하기</span>
+          <span className="mt-0.5 block text-xs text-brand-100">촬영 가이드에 따라 30초면 충분해요</span>
+        </span>
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15">
+          <CameraIcon className="h-5 w-5" />
+        </span>
+      </Link>
+
+      <div className="mt-6">
+        <SectionTitle title="관찰 중인 사례" action={{ label: "전체보기", href: "/cases" }} />
+        <div className="space-y-2.5">
+          {activeCases.map((c) => (
+            <Link key={c.id} href={`/cases/${c.id}/timeline`}>
+              <Card className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-foreground">{c.bodyPart}</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    관찰 {c.daysObserved}일째 · 면적 비율 {c.latestAreaRatio}%
+                  </p>
+                </div>
+                <TrendBadge status={c.status} />
+              </Card>
+            </Link>
+          ))}
         </div>
-      </main>
+      </div>
+
+      <div className="mt-6">
+        <SectionTitle title="최근 기록" action={{ label: "기록 보기", href: "/cases" }} />
+        <Link href="/cases" className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
+          {recentPhotos.map((p) => (
+            <div key={p.id} className="w-28 shrink-0 rounded-xl border border-border bg-surface p-2">
+              <div
+                className="h-20 w-full rounded-lg"
+                style={{ backgroundColor: p.imageColor }}
+              />
+              <p className="mt-1.5 text-[11px] font-medium text-foreground">{p.takenAt.slice(5)}</p>
+              <p className="text-[11px] text-muted">면적 {p.areaRatio}%</p>
+            </div>
+          ))}
+        </Link>
+      </div>
+
+      <div className="mt-6">
+        <SectionTitle title="우리 지역 유행 현황" />
+        <Card>
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <MapPinIcon className="h-3.5 w-3.5" />
+            {currentChild.region.province} {currentChild.region.district} · 질병관리청 기준
+          </div>
+          <div className="mt-3 space-y-2">
+            {risingOutbreaks.map((o) => (
+              <div key={o.diseaseName} className="flex items-center justify-between text-sm">
+                <span className="text-foreground">{o.diseaseName}</span>
+                <span className="font-semibold text-status-caution">신고 {o.changeRate}% 증가</span>
+              </div>
+            ))}
+          </div>
+          <Link href="/outbreak" className="mt-3 flex items-center justify-center gap-1 text-xs font-medium text-brand-700">
+            자세히 보기 <ChevronRightIcon className="h-3.5 w-3.5" />
+          </Link>
+        </Card>
+      </div>
+
     </div>
   );
 }

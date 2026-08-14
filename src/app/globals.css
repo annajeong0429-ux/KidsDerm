@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f5f1;
+  --foreground: #1c1917;
+
+  /* Brand: near-black ink (primary actions/UI chrome) */
+  --color-brand-50: #f2f2f0;
+  --color-brand-100: #e3e3df;
+  --color-brand-200: #c7c7c0;
+  --color-brand-300: #9d9d93;
+  --color-brand-400: #6e6e63;
+  --color-brand-500: #46463f;
+  --color-brand-600: #262622;
+  --color-brand-700: #1a1a17;
+  --color-brand-800: #131311;
+  --color-brand-900: #0c0c0b;
+
+  /* Logo green: reserved for the sprout mark + wordmark only */
+  --color-logo-green: #2fa84f;
+  --color-logo-green-dark: #237d3c;
+
+  /* Social login brand colors (fixed 3rd-party marks) */
+  --color-kakao: #fee500;
+  --color-naver: #03c75a;
+
+  /* Accent: warm, kid-friendly coral */
+  --color-accent-50: #fff3ed;
+  --color-accent-100: #ffe4d4;
+  --color-accent-200: #ffc4a8;
+  --color-accent-300: #ff9c71;
+  --color-accent-400: #fd7a49;
+  --color-accent-500: #f6602a;
+  --color-accent-600: #e14913;
+  --color-accent-700: #ba3710;
+
+  /* Status: conservative, non-alarming palette */
+  --color-status-improve: #2f9461;
+  --color-status-improve-bg: #eaf6ef;
+  --color-status-maintain: #6b7280;
+  --color-status-maintain-bg: #f1f1ef;
+  --color-status-caution: #b7791f;
+  --color-status-caution-bg: #fdf3e3;
+
+  --color-canvas: #f6f5f1;
+  --color-surface: #ffffff;
+  --color-border: #e7e4dc;
+  --color-muted: #78716c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brand-50: var(--color-brand-50);
+  --color-brand-100: var(--color-brand-100);
+  --color-brand-200: var(--color-brand-200);
+  --color-brand-300: var(--color-brand-300);
+  --color-brand-400: var(--color-brand-400);
+  --color-brand-500: var(--color-brand-500);
+  --color-brand-600: var(--color-brand-600);
+  --color-brand-700: var(--color-brand-700);
+  --color-brand-800: var(--color-brand-800);
+  --color-brand-900: var(--color-brand-900);
+
+  --color-logo-green: var(--color-logo-green);
+  --color-logo-green-dark: var(--color-logo-green-dark);
+  --color-kakao: var(--color-kakao);
+  --color-naver: var(--color-naver);
+
+  --color-accent-50: var(--color-accent-50);
+  --color-accent-100: var(--color-accent-100);
+  --color-accent-200: var(--color-accent-200);
+  --color-accent-300: var(--color-accent-300);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-600: var(--color-accent-600);
+  --color-accent-700: var(--color-accent-700);
+
+  --color-status-improve: var(--color-status-improve);
+  --color-status-improve-bg: var(--color-status-improve-bg);
+  --color-status-maintain: var(--color-status-maintain);
+  --color-status-maintain-bg: var(--color-status-maintain-bg);
+  --color-status-caution: var(--color-status-caution);
+  --color-status-caution-bg: var(--color-status-caution-bg);
+
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-border: var(--color-border);
+  --color-muted: var(--color-muted);
+
+  --font-sans: var(--font-noto-kr);
 }
 
 body {
-  background: var(--background);
+  background: var(--color-canvas);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+/* Hide scrollbar for horizontal chip/slide rows while keeping it scrollable */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
