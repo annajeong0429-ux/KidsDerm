@@ -12,12 +12,14 @@ services:
     environment:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
+      # 8000번은 이 컴퓨터에서 다른 프로젝트(Re:medi fastapi 컨테이너)가 이미 쓰고 있어서 8001로 뺐다.
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8001/api/v1
 
   backend:
     build:
       context: ./backend
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - ./backend:/app
     environment:
