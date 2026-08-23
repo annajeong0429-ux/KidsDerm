@@ -10,7 +10,7 @@ export default function OutbreakContextPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="지역·시기 유행 정보" backHref="/analysis/result" />
+      <ScreenHeader title="지역·시기 유행 정보" backHref="/analysis/severity" />
 
       <div className="flex-1 overflow-y-auto px-6 pt-2">
         <p className="text-sm text-muted">

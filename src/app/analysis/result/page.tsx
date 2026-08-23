@@ -56,7 +56,7 @@ export default function ClassificationResultPage() {
       </div>
 
       <div className="px-6 pb-6 pt-3">
-        <Link href="/analysis/outbreak-context">
+        <Link href="/analysis/severity">
           <Button fullWidth size="lg">
             다음
           </Button>
