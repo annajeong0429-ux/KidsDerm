@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
@@ -138,6 +139,26 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
+}
+
+/**
+ * 로그인이 꼭 필요한 화면(기록 입력, 진단 입력, 내 사례 보기 등)에서 쓴다. 로그인 여부를
+ * 아직 확인 중이면(loading) 아무 것도 안 하고 기다리고, 확인이 끝났는데 로그인 안 돼 있으면
+ * 지금 있던 경로를 ?redirect=로 붙여서 로그인 화면으로 보낸다 - 로그인 후 원래 보려던
+ * 화면으로 자동 복귀시키기 위해서다.
+ */
+export function useRequireAuth() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [loading, user, pathname, router]);
+
+  return { user, loading };
 }
 
 export { ApiError };

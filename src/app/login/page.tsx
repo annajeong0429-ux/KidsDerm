@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LogoMark, Wordmark, CheckIcon } from "@/components/icons";
 import { ApiError, useAuth } from "@/lib/auth-context";
 
@@ -20,7 +20,16 @@ function KakaoIcon() {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [autoLogin, setAutoLogin] = useState(false);
   const [email, setEmail] = useState("");
@@ -34,7 +43,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      router.push("/");
+      router.push(searchParams.get("redirect") || "/");
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "로그인에 실패했어요. 잠시 후 다시 시도해 주세요.");
     } finally {

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/lib/auth-context";
+import { ChildProfileProvider } from "@/lib/child-profile-context";
 import "./globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ko" className={`${notoSansKr.variable} h-full antialiased`}>
       <body className="min-h-full">
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <ChildProfileProvider>
+            <AppShell>{children}</AppShell>
+          </ChildProfileProvider>
         </AuthProvider>
       </body>
     </html>
