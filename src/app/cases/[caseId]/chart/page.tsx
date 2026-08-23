@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { photoRecords } from "@/lib/mock-data";
 
 const W = 300;
@@ -72,6 +73,10 @@ export default function AreaChartPage({ params }: { params: Promise<{ caseId: st
           면적 비율 = 병변 픽셀 수 ÷ (피부 픽셀 수 + 병변 픽셀 수). 촬영 거리가 달라져도 화면에
           포착된 피부 전체를 분모로 삼아 비율이 비교적 안정적으로 유지됩니다.
         </p>
+
+        <div className="mt-4">
+          <DisclaimerBanner />
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { TrendBadge } from "@/components/ui/Badge";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { cases, diagnoses, photoRecords, prescriptions } from "@/lib/mock-data";
 import { useChildProfile } from "@/lib/child-profile-context";
 
@@ -75,6 +76,12 @@ export default function ReportPreviewPage({ params }: { params: Promise<{ caseId
             </div>
           )}
         </Card>
+
+        <p className="mt-3 text-xs font-medium text-muted">의료진 판단 보조 자료입니다.</p>
+
+        <div className="mt-2">
+          <DisclaimerBanner />
+        </div>
       </div>
 
       <div className="px-5 pb-6 pt-3">

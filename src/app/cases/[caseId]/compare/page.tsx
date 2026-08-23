@@ -2,6 +2,7 @@
 
 import { use, useState } from "react";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { photoRecords } from "@/lib/mock-data";
 
 export default function ComparePage({ params }: { params: Promise<{ caseId: string }> }) {
@@ -91,6 +92,10 @@ export default function ComparePage({ params }: { params: Promise<{ caseId: stri
             </div>
           </>
         )}
+
+        <div className="mt-5">
+          <DisclaimerBanner />
+        </div>
       </div>
     </div>
   );

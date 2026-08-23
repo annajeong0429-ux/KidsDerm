@@ -3,6 +3,7 @@ import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { TrendUpIcon, MapPinIcon } from "@/components/icons";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { outbreakEntries } from "@/lib/mock-data";
 
 export default function OutbreakContextPage() {
@@ -38,6 +39,10 @@ export default function OutbreakContextPage() {
           출처: 질병관리청 전수신고 감염병 발생현황 오픈API. 신고 건수 증가는 우리 아이의 실제
           감염 여부를 의미하지 않으며, 감별 우선순위를 조정하는 참고 정보로만 활용됩니다.
         </p>
+
+        <div className="mt-4">
+          <DisclaimerBanner />
+        </div>
       </div>
 
       <div className="px-6 pb-6 pt-3">
