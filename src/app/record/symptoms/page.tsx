@@ -15,27 +15,39 @@ export default function SymptomsPage() {
     <div className="flex h-full flex-col">
       <ScreenHeader title="증상 체크리스트" backHref="/record/confirm" />
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-6 pt-2">
-        <IntensitySlider
-          label="가려움"
-          value={symptoms.itching}
-          onChange={(v) => setSymptoms({ ...symptoms, itching: v })}
-        />
-        <IntensitySlider
-          label="진물"
-          value={symptoms.oozing}
-          onChange={(v) => setSymptoms({ ...symptoms, oozing: v })}
-        />
-        <IntensitySlider
-          label="통증"
-          value={symptoms.pain}
-          onChange={(v) => setSymptoms({ ...symptoms, pain: v })}
-        />
-        <IntensitySlider
-          label="발열"
-          value={symptoms.fever}
-          onChange={(v) => setSymptoms({ ...symptoms, fever: v })}
-        />
+      <div className="flex-1 space-y-6 overflow-y-auto px-6 pt-2">
+        <div className="space-y-5">
+          <p className="text-xs font-semibold text-muted">피부 증상</p>
+          <IntensitySlider
+            label="가려움"
+            value={symptoms.itching}
+            onChange={(v) => setSymptoms({ ...symptoms, itching: v })}
+          />
+          <IntensitySlider
+            label="진물"
+            value={symptoms.oozing}
+            onChange={(v) => setSymptoms({ ...symptoms, oozing: v })}
+          />
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs font-semibold text-muted">전신 증상</p>
+            <p className="mt-0.5 text-[11px] text-muted">
+              통증·발열 같은 전신 증상을 피부 증상과 함께 보면 질환을 감별하는 데 도움이 돼요.
+            </p>
+          </div>
+          <IntensitySlider
+            label="통증"
+            value={symptoms.pain}
+            onChange={(v) => setSymptoms({ ...symptoms, pain: v })}
+          />
+          <IntensitySlider
+            label="발열"
+            value={symptoms.fever}
+            onChange={(v) => setSymptoms({ ...symptoms, fever: v })}
+          />
+        </div>
 
         <Checkbox
           checked={symptoms.newLesion}
