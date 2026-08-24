@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { TrendBadge } from "@/components/ui/Badge";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { cases, photoRecords } from "@/lib/mock-data";
 
 export default async function ChangeSummaryPage({ params }: { params: Promise<{ caseId: string }> }) {
@@ -68,6 +69,10 @@ export default async function ChangeSummaryPage({ params }: { params: Promise<{ 
             {activeCase.status === "유지" && "면적과 징후 점수 모두 큰 변화 없이 유지되고 있습니다."}
           </p>
         </Card>
+
+        <div className="mt-3">
+          <DisclaimerBanner />
+        </div>
       </div>
     </div>
   );

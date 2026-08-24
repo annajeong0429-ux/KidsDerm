@@ -1,6 +1,7 @@
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { TrendBadge } from "@/components/ui/Badge";
 import { CameraIcon, CalendarIcon } from "@/components/icons";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { cases, diagnoses, photoRecords } from "@/lib/mock-data";
 import { notFound } from "next/navigation";
 
@@ -58,6 +59,10 @@ export default async function CaseTimelinePage({ params }: { params: Promise<{ c
               )}
             </div>
           ))}
+        </div>
+
+        <div className="mt-5">
+          <DisclaimerBanner />
         </div>
       </div>
     </div>

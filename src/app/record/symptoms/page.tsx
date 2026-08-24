@@ -7,6 +7,38 @@ import { IntensitySlider } from "@/components/ui/IntensitySlider";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { useRecordFlow } from "@/lib/record-context";
 
+function feverStatus(temp: number): { label: string; tone: string } {
+  if (temp >= 38.0) return { label: "고열", tone: "text-status-caution" };
+  if (temp >= 37.5) return { label: "미열", tone: "text-brand-600" };
+  return { label: "정상", tone: "text-muted" };
+}
+
+function TemperatureInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const status = feverStatus(value);
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">발열</span>
+        <span className={`text-xs font-semibold ${status.tone}`}>{status.label}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          inputMode="decimal"
+          step={0.1}
+          min={34}
+          max={42}
+          value={value}
+          onChange={(e) => onChange(e.target.value === "" ? 0 : parseFloat(e.target.value))}
+          className="h-11 w-24 rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500"
+        />
+        <span className="text-sm text-muted">°C</span>
+        <span className="text-xs text-muted">(고막·이마 체온계 기준)</span>
+      </div>
+    </div>
+  );
+}
+
 export default function SymptomsPage() {
   const router = useRouter();
   const { symptoms, setSymptoms } = useRecordFlow();
@@ -15,27 +47,38 @@ export default function SymptomsPage() {
     <div className="flex h-full flex-col">
       <ScreenHeader title="증상 체크리스트" backHref="/record/confirm" />
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-6 pt-2">
-        <IntensitySlider
-          label="가려움"
-          value={symptoms.itching}
-          onChange={(v) => setSymptoms({ ...symptoms, itching: v })}
-        />
-        <IntensitySlider
-          label="진물"
-          value={symptoms.oozing}
-          onChange={(v) => setSymptoms({ ...symptoms, oozing: v })}
-        />
-        <IntensitySlider
-          label="통증"
-          value={symptoms.pain}
-          onChange={(v) => setSymptoms({ ...symptoms, pain: v })}
-        />
-        <IntensitySlider
-          label="발열"
-          value={symptoms.fever}
-          onChange={(v) => setSymptoms({ ...symptoms, fever: v })}
-        />
+      <div className="flex-1 space-y-6 overflow-y-auto px-6 pt-2">
+        <div className="space-y-5">
+          <p className="text-xs font-semibold text-muted">피부 증상</p>
+          <IntensitySlider
+            label="가려움"
+            value={symptoms.itching}
+            onChange={(v) => setSymptoms({ ...symptoms, itching: v })}
+          />
+          <IntensitySlider
+            label="진물"
+            value={symptoms.oozing}
+            onChange={(v) => setSymptoms({ ...symptoms, oozing: v })}
+          />
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs font-semibold text-muted">전신 증상</p>
+            <p className="mt-0.5 text-[11px] text-muted">
+              통증·발열 같은 전신 증상을 피부 증상과 함께 보면 질환을 감별하는 데 도움이 돼요.
+            </p>
+          </div>
+          <IntensitySlider
+            label="통증"
+            value={symptoms.pain}
+            onChange={(v) => setSymptoms({ ...symptoms, pain: v })}
+          />
+          <TemperatureInput
+            value={symptoms.fever}
+            onChange={(v) => setSymptoms({ ...symptoms, fever: v })}
+          />
+        </div>
 
         <Checkbox
           checked={symptoms.newLesion}

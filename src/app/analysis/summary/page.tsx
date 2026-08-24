@@ -6,6 +6,7 @@ import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ChevronRightIcon } from "@/components/icons";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { cases, classificationResult } from "@/lib/mock-data";
 
 const activeCase = cases[0];
@@ -64,6 +65,10 @@ export default function AnalysisSummaryPage() {
           동일한 입력에는 항상 동일한 문구가 생성되며, 안내 내용의 일관성과 추적 가능성이
           보장됩니다.
         </p>
+
+        <div className="mt-4">
+          <DisclaimerBanner />
+        </div>
       </div>
 
       <div className="px-6 pb-6 pt-3">

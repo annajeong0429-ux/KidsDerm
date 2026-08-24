@@ -3,6 +3,7 @@ import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { Pill } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { classificationResult } from "@/lib/mock-data";
 
 export default function ClassificationResultPage() {
@@ -53,10 +54,14 @@ export default function ClassificationResultPage() {
           위 목록은 확정 진단이 아닌 감별 대상 후보이며, 사진과 증상 기록을 바탕으로 산출된
           참고 정보입니다. 실제 진단은 의료진의 진료를 통해 이루어집니다.
         </p>
+
+        <div className="mt-4">
+          <DisclaimerBanner />
+        </div>
       </div>
 
       <div className="px-6 pb-6 pt-3">
-        <Link href="/analysis/outbreak-context">
+        <Link href="/analysis/severity">
           <Button fullWidth size="lg">
             다음
           </Button>

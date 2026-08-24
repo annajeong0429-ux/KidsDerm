@@ -5,7 +5,7 @@ import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Button } from "@/components/ui/Button";
 import { useRecordFlow } from "@/lib/record-context";
 
-const ONSET_OPTIONS = ["오늘 처음", "2~3일 전", "1주 전", "2주 이상 전", "잘 모르겠어요"];
+const ONSET_OPTIONS = ["오늘 처음", "2~3일 전", "1주 전", "2주 이상 전", "잘 모르겠어요", "기타"];
 const DISTRIBUTION_OPTIONS = [
   { key: "단일", label: "단일", desc: "한 곳에만" },
   { key: "부분", label: "부분", desc: "몇 군데 흩어져" },
@@ -14,7 +14,17 @@ const DISTRIBUTION_OPTIONS = [
 
 export default function OnsetPage() {
   const router = useRouter();
-  const { onsetTiming, setOnsetTiming, distribution, setDistribution } = useRecordFlow();
+  const {
+    onsetTiming,
+    setOnsetTiming,
+    onsetTimingDetail,
+    setOnsetTimingDetail,
+    distribution,
+    setDistribution,
+  } = useRecordFlow();
+
+  const isOther = onsetTiming === "기타";
+  const canProceed = Boolean(onsetTiming) && (!isOther || onsetTimingDetail.trim().length > 0);
 
   return (
     <div className="flex h-full flex-col">
@@ -36,6 +46,15 @@ export default function OnsetPage() {
               </button>
             ))}
           </div>
+
+          {isOther && (
+            <input
+              value={onsetTimingDetail}
+              onChange={(e) => setOnsetTimingDetail(e.target.value)}
+              placeholder="예: 3주 전 예방접종 이후"
+              className="mt-2 h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm outline-none focus:border-brand-500"
+            />
+          )}
         </div>
 
         <div>
@@ -60,7 +79,7 @@ export default function OnsetPage() {
       </div>
 
       <div className="px-6 pb-6 pt-3">
-        <Button fullWidth size="lg" disabled={!onsetTiming} onClick={() => router.push("/record/done")}>
+        <Button fullWidth size="lg" disabled={!canProceed} onClick={() => router.push("/record/done")}>
           기록 저장하기
         </Button>
       </div>

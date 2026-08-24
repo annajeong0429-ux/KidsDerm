@@ -3,6 +3,7 @@
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { MapPinIcon, TrendDownIcon, TrendUpIcon } from "@/components/icons";
+import { DisclaimerBanner } from "@/components/ui/Disclaimer";
 import { outbreakEntries } from "@/lib/mock-data";
 import { useChildProfile } from "@/lib/child-profile-context";
 
@@ -73,6 +74,10 @@ export default function OutbreakPage() {
           신고 건수 증가는 해당 지역·시기에 발생 위험이 높아졌다는 참고 정보이며, 우리 아이의 실제 감염 여부를
           의미하지 않습니다. 의심 증상이 있다면 분석 결과 화면에서 함께 확인하세요.
         </p>
+
+        <div className="mt-4">
+          <DisclaimerBanner />
+        </div>
       </div>
     </div>
   );
