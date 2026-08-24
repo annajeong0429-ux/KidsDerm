@@ -35,10 +35,10 @@ export interface PhotoRecord {
 }
 
 export interface SymptomEntry {
-  itching: number;
-  oozing: number;
-  pain: number;
-  fever: number;
+  itching: number; // 1(없음)~5(매우 심함)
+  oozing: number; // 1(없음)~5(매우 심함)
+  pain: number; // 1(없음)~5(매우 심함)
+  fever: number; // 실측 체온(°C) — 강도 스케일이 아님
   newLesion: boolean;
   memo?: string;
 }

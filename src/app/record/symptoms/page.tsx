@@ -7,6 +7,38 @@ import { IntensitySlider } from "@/components/ui/IntensitySlider";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { useRecordFlow } from "@/lib/record-context";
 
+function feverStatus(temp: number): { label: string; tone: string } {
+  if (temp >= 38.0) return { label: "고열", tone: "text-status-caution" };
+  if (temp >= 37.5) return { label: "미열", tone: "text-brand-600" };
+  return { label: "정상", tone: "text-muted" };
+}
+
+function TemperatureInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const status = feverStatus(value);
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">발열</span>
+        <span className={`text-xs font-semibold ${status.tone}`}>{status.label}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          inputMode="decimal"
+          step={0.1}
+          min={34}
+          max={42}
+          value={value}
+          onChange={(e) => onChange(e.target.value === "" ? 0 : parseFloat(e.target.value))}
+          className="h-11 w-24 rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500"
+        />
+        <span className="text-sm text-muted">°C</span>
+        <span className="text-xs text-muted">(고막·이마 체온계 기준)</span>
+      </div>
+    </div>
+  );
+}
+
 export default function SymptomsPage() {
   const router = useRouter();
   const { symptoms, setSymptoms } = useRecordFlow();
@@ -42,8 +74,7 @@ export default function SymptomsPage() {
             value={symptoms.pain}
             onChange={(v) => setSymptoms({ ...symptoms, pain: v })}
           />
-          <IntensitySlider
-            label="발열"
+          <TemperatureInput
             value={symptoms.fever}
             onChange={(v) => setSymptoms({ ...symptoms, fever: v })}
           />

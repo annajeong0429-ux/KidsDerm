@@ -28,12 +28,13 @@ interface RecordFlowState {
 
 const RecordFlowContext = createContext<RecordFlowState | null>(null);
 
-// 1(없음)~5(매우 심함) - 자가보고 증상 5단계 스케일의 기본값(가장 낮은 단계)이다.
+// itching/oozing/pain: 1(없음)~5(매우 심함) 자가보고 증상 5단계 스케일. fever는 주관적
+// 강도가 아니라 실측 체온(°C)이라 별도로 정상 체온을 기본값으로 둔다.
 const defaultSymptoms: SymptomEntry = {
   itching: 1,
   oozing: 1,
   pain: 1,
-  fever: 1,
+  fever: 36.5,
   newLesion: false,
   memo: "",
 };
