@@ -7,6 +7,9 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.apis.v1.auth_routers import auth_router
+from app.apis.v1.case_routers import case_router, record_router
+from app.apis.v1.child_routers import child_router
+from app.apis.v1.medical_routers import diagnosis_item_router, diagnosis_router
 from app.apis.v1.user_routers import user_router
 from app.core.config import config
 from app.core.db.database import engine
@@ -15,7 +18,14 @@ from app.models.base import Base
 
 # 아래 import 두 개는 실제로는 안 쓰지만, Base.metadata가 이 테이블들을 알게 하려면
 # 모델 파일이 한 번은 import돼야 한다 (SQLAlchemy가 테이블 정의를 "등록"하는 방식).
-from app.models import issued_refresh_token, users  # noqa: F401
+from app.models import (  # noqa: F401
+    cases,
+    child_profiles,
+    issued_refresh_token,
+    medical,
+    records,
+    users,
+)
 
 
 @asynccontextmanager
@@ -47,6 +57,11 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
+app.include_router(child_router, prefix="/api/v1")
+app.include_router(case_router, prefix="/api/v1")
+app.include_router(record_router, prefix="/api/v1")
+app.include_router(diagnosis_router, prefix="/api/v1")
+app.include_router(diagnosis_item_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["health"])
