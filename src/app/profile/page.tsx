@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Button } from "@/components/ui/Button";
-import { childProfiles as mockSiblingProfiles } from "@/lib/mock-data";
 import { useChildProfile } from "@/lib/child-profile-context";
 import { UserIcon } from "@/components/icons";
 
@@ -15,20 +13,26 @@ function ageOf(birthDate: string) {
 
 export default function ProfileListPage() {
   const router = useRouter();
-  const { childProfile } = useChildProfile();
-  // 실제로 등록한 프로필을 첫 번째 자리에 두고, 나머지는 "여러 아이 등록" 데모용 목데이터를 그대로 보여준다.
-  const childProfiles = [childProfile, ...mockSiblingProfiles.filter((c) => c.id !== childProfile.id)];
-  const [activeId, setActiveId] = useState(childProfile.id);
+  const { children: childProfiles, childProfile, loading, selectChild } = useChildProfile();
+  const activeId = childProfile?.id ?? null;
 
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="아이 프로필" backHref="/" />
 
       <div className="flex-1 space-y-3 px-6 pt-2">
+        {loading && <p className="py-8 text-center text-sm text-muted">불러오는 중...</p>}
+
+        {!loading && childProfiles.length === 0 && (
+          <p className="py-8 text-center text-sm text-muted">
+            아직 등록한 아이가 없어요. 아래에서 프로필을 추가해 주세요.
+          </p>
+        )}
+
         {childProfiles.map((child) => (
           <button
             key={child.id}
-            onClick={() => setActiveId(child.id)}
+            onClick={() => selectChild(child.id)}
             className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-colors ${
               activeId === child.id ? "border-brand-500 bg-brand-50" : "border-border bg-surface"
             }`}
@@ -62,7 +66,7 @@ export default function ProfileListPage() {
       </div>
 
       <div className="px-6 pb-6 pt-4">
-        <Button fullWidth size="lg" onClick={() => router.push("/")}>
+        <Button fullWidth size="lg" onClick={() => router.push("/")} disabled={!childProfile}>
           이 프로필로 계속하기
         </Button>
       </div>

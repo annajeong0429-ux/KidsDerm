@@ -1,16 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { TrendBadge } from "@/components/ui/Badge";
-import { cases } from "@/lib/mock-data";
+import { listCases, type CaseSummary } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { useChildProfile } from "@/lib/child-profile-context";
 
 const FILTERS = ["전체", "관찰 중", "종료됨"] as const;
 
 export default function CaseListPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("전체");
+  const { accessToken } = useAuth();
+  const { childProfile } = useChildProfile();
+  // 어느 아이 것인지와 함께 보관해서, 아이를 바꾸면 새 목록이 도착하기 전까지
+  // 이전 아이의 사례가 화면에 남지 않도록 한다.
+  const [fetched, setFetched] = useState<{ childId: string; list: CaseSummary[] } | null>(null);
+
+  useEffect(() => {
+    if (!childProfile) return;
+    const childId = childProfile.id;
+    let cancelled = false;
+    listCases(accessToken, childId)
+      .then((list) => {
+        if (!cancelled) setFetched({ childId, list });
+      })
+      .catch(() => {
+        if (!cancelled) setFetched({ childId, list: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, childProfile]);
+
+  const cases = childProfile && fetched?.childId === childProfile.id ? fetched.list : [];
+  const loading = Boolean(childProfile) && fetched?.childId !== childProfile?.id;
 
   const filtered = cases.filter((c) => {
     if (filter === "관찰 중") return c.active;
@@ -56,8 +82,11 @@ export default function CaseListPage() {
             </Card>
           </Link>
         ))}
-        {filtered.length === 0 && (
-          <p className="pt-10 text-center text-sm text-muted">해당하는 사례가 없어요</p>
+        {loading && <p className="pt-10 text-center text-sm text-muted">불러오는 중...</p>}
+        {!loading && filtered.length === 0 && (
+          <p className="pt-10 text-center text-sm text-muted">
+            {childProfile ? "해당하는 사례가 없어요" : "아이 프로필을 먼저 등록해 주세요"}
+          </p>
         )}
       </div>
     </div>

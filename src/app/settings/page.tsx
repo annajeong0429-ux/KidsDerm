@@ -54,15 +54,19 @@ export default function SettingsHomePage() {
         <Link href="/profile" className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
           <span
             className="flex h-12 w-12 items-center justify-center rounded-full"
-            style={{ backgroundColor: childProfile.avatarColor }}
+            style={{ backgroundColor: childProfile?.avatarColor ?? "var(--color-border)" }}
           >
             <UserIcon className="h-6 w-6 text-white" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-bold text-foreground">{childProfile.name} 보호자</span>
-            <span className="mt-0.5 flex items-center gap-1 text-xs text-muted">
-              <MapPinIcon className="h-3 w-3" /> {childProfile.region.province} {childProfile.region.district}
+            <span className="block text-sm font-bold text-foreground">
+              {childProfile ? `${childProfile.name} 보호자` : "아이 프로필 미등록"}
             </span>
+            {childProfile && (
+              <span className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                <MapPinIcon className="h-3 w-3" /> {childProfile.region.province} {childProfile.region.district}
+              </span>
+            )}
             <span className="mt-0.5 block text-xs text-muted">
               {user ? `${user.email} 로그인됨` : "로그인이 필요해요"}
             </span>

@@ -1,10 +1,16 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { DisclaimerBanner } from "@/components/ui/Disclaimer";
-import { diagnoses, photoRecords } from "@/lib/mock-data";
+import {
+  getCase,
+  listDiagnoses,
+  type DiagnosisWithPrescriptions,
+  type PhotoRecordWithSymptoms,
+} from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { SeaseFourSigns } from "@/lib/types";
 
 const W = 300;
@@ -37,13 +43,41 @@ function dateToFractionalIndex(dateStr: string, shotDates: string[]): number {
 
 export default function AreaChartPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = use(params);
-  const shots = [...photoRecords.filter((p) => p.caseId === caseId)].sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
-  const prescription = diagnoses.find((d) => d.caseId === caseId);
+  const { accessToken, loading: authLoading } = useAuth();
+  const [shots, setShots] = useState<PhotoRecordWithSymptoms[]>([]);
+  const [prescription, setPrescription] = useState<DiagnosisWithPrescriptions | null>(null);
+  const [loading, setLoading] = useState(true);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [view, setView] = useState<"area" | "signs">("area");
   const [visibleSigns, setVisibleSigns] = useState<Set<SignKey>>(
     new Set(SIGN_META.map((s) => s.key))
   );
+
+  useEffect(() => {
+    // 로그인 복원이 끝나기 전에는 토큰이 없어서 요청해봐야 401이 난다.
+    if (authLoading) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const [detail, dxList] = await Promise.all([
+          getCase(accessToken, caseId),
+          listDiagnoses(accessToken, caseId),
+        ]);
+        if (cancelled) return;
+        setShots(detail.photos);
+        // 그래프의 세로선은 "치료를 시작한 시점"을 보여주는 것이라 가장 이른 진단을 쓴다.
+        setPrescription(dxList[0] ?? null);
+      } catch {
+        if (!cancelled) setShots([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, authLoading, caseId]);
 
   const maxRatio = Math.max(...shots.map((s) => s.areaRatio), 15);
   const threshold = 10; // conservative example threshold for "확대 추세" caution line
@@ -61,9 +95,11 @@ export default function AreaChartPage({ params }: { params: Promise<{ caseId: st
   const areaLinePoints = shots.map((s, i) => `${toX(i)},${toYArea(s.areaRatio)}`).join(" ");
   const thresholdY = toYArea(threshold);
 
-  const prescriptionX = prescription
-    ? toX(dateToFractionalIndex(prescription.date, shots.map((s) => s.takenAt)))
-    : null;
+  // 사진이 없으면 가로축 자체가 없어서 세로선을 그릴 자리도 없다.
+  const prescriptionX =
+    prescription && shots.length > 0
+      ? toX(dateToFractionalIndex(prescription.date, shots.map((s) => s.takenAt)))
+      : null;
 
   function toggleSign(key: SignKey) {
     setVisibleSigns((prev) => {
@@ -72,6 +108,17 @@ export default function AreaChartPage({ params }: { params: Promise<{ caseId: st
       else next.add(key);
       return next;
     });
+  }
+
+  if (loading || shots.length === 0) {
+    return (
+      <div className="flex h-full flex-col">
+        <ScreenHeader title="면적·징후 변화 그래프" backHref={`/cases/${caseId}/timeline`} />
+        <p className="px-5 pt-10 text-center text-sm text-muted">
+          {loading ? "불러오는 중..." : "아직 촬영 기록이 없어 그래프를 그릴 수 없어요."}
+        </p>
+      </div>
+    );
   }
 
   return (

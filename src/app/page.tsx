@@ -1,36 +1,77 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, SectionTitle } from "@/components/ui/Card";
 import { TrendBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CameraIcon, ChevronRightIcon, MapPinIcon, UserIcon } from "@/components/icons";
-import { cases, outbreakEntries, photoRecords } from "@/lib/mock-data";
+import { outbreakEntries } from "@/lib/mock-data";
+import { getCase, listCases, type CaseSummary, type PhotoRecordWithSymptoms } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useChildProfile } from "@/lib/child-profile-context";
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const { childProfile } = useChildProfile();
-  const activeCases = cases.filter((c) => c.active);
-  const recentPhotos = [...photoRecords].sort((a, b) => (a.takenAt < b.takenAt ? 1 : -1)).slice(0, 3);
+  // 어느 아이 것인지와 함께 보관한다 - 아이를 바꿨을 때 이전 아이의 사례·사진이
+  // 새 데이터가 오기 전까지 화면에 남는 것을 구조적으로 막는다.
+  const [fetched, setFetched] = useState<{
+    childId: string;
+    cases: CaseSummary[];
+    photos: PhotoRecordWithSymptoms[];
+  } | null>(null);
+  // 유행 정보는 아직 질병관리청 API를 붙이지 않아서 목데이터를 그대로 쓴다.
   const risingOutbreaks = outbreakEntries.filter((o) => o.trend === "증가").slice(0, 2);
+
+  useEffect(() => {
+    if (!childProfile) return;
+    const childId = childProfile.id;
+    let cancelled = false;
+    (async () => {
+      try {
+        const all = await listCases(accessToken, childId);
+        const active = all.filter((c) => c.active);
+
+        // 최근 기록 미리보기: 사진이 있는 가장 최근 사례 한 건만 펼쳐본다.
+        // 사례를 전부 펼치면 홈 화면 한 번 여는 데 요청이 너무 많아진다.
+        const newest = active.find((c) => c.photoCount > 0);
+        const photos = newest ? (await getCase(accessToken, newest.id)).photos : [];
+        if (!cancelled) {
+          setFetched({ childId, cases: active, photos: [...photos].reverse().slice(0, 3) });
+        }
+      } catch {
+        if (!cancelled) setFetched({ childId, cases: [], photos: [] });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, childProfile]);
+
+  const current = childProfile && fetched?.childId === childProfile.id ? fetched : null;
+  const activeCases = current?.cases ?? [];
+  const recentPhotos = current?.photos ?? [];
 
   return (
     <div className="flex flex-col px-5 pb-6 pt-5">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-muted">
-            {user ? `${childProfile.region.province} ${childProfile.region.district}` : "키즈덤AI"}
+            {childProfile ? `${childProfile.region.province} ${childProfile.region.district}` : "키즈덤AI"}
           </p>
           <h1 className="text-lg font-bold text-foreground">
-            {user ? `${childProfile.name} 보호자님, 안녕하세요` : "로그인하고 시작해보세요"}
+            {childProfile
+              ? `${childProfile.name} 보호자님, 안녕하세요`
+              : user
+                ? "아이 프로필을 등록해 주세요"
+                : "로그인하고 시작해보세요"}
           </h1>
         </div>
         <Link
           href={user ? "/profile" : "/login"}
           className="flex h-10 w-10 items-center justify-center rounded-full"
-          style={{ backgroundColor: user ? childProfile.avatarColor : "var(--color-border)" }}
+          style={{ backgroundColor: childProfile?.avatarColor ?? "var(--color-border)" }}
         >
           <UserIcon className="h-5 w-5 text-white" />
         </Link>
@@ -67,6 +108,15 @@ export default function HomePage() {
                   </Card>
                 </Link>
               ))}
+              {activeCases.length === 0 && (
+                <Card>
+                  <p className="text-center text-sm text-muted">
+                    {childProfile
+                      ? "아직 관찰 중인 사례가 없어요. 촬영을 시작해 보세요."
+                      : "아이 프로필을 먼저 등록해 주세요."}
+                  </p>
+                </Card>
+              )}
             </div>
           </div>
 
@@ -101,7 +151,9 @@ export default function HomePage() {
         <Card>
           <div className="flex items-center gap-1.5 text-xs text-muted">
             <MapPinIcon className="h-3.5 w-3.5" />
-            {childProfile.region.province} {childProfile.region.district} · 질병관리청 기준
+            {childProfile
+              ? `${childProfile.region.province} ${childProfile.region.district} · 질병관리청 기준`
+              : "질병관리청 기준"}
           </div>
           <div className="mt-3 space-y-2">
             {risingOutbreaks.map((o) => (

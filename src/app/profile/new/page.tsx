@@ -12,24 +12,32 @@ const AVATAR_COLORS = ["var(--color-accent-200)", "var(--color-brand-200)", "#f5
 
 export default function NewProfilePage() {
   const router = useRouter();
-  const { childProfile, setChildProfile } = useChildProfile();
+  const { createChild } = useChildProfile();
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState<"남" | "여">("남");
   const [province, setProvince] = useState(PROVINCES[0]);
   const [district, setDistrict] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setChildProfile({
-      ...childProfile,
-      name,
-      birthDate,
-      gender,
-      region: { province, district },
-      avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-    });
-    router.push("/");
+    setSubmitting(true);
+    setError("");
+    try {
+      await createChild({
+        name,
+        birthDate,
+        gender,
+        region: { province, district },
+        avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+      });
+      router.push("/");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "등록에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -103,8 +111,10 @@ export default function NewProfilePage() {
           거주 지역은 질병관리청 감염병 발생현황 조회 기준으로 사용돼요
         </p>
 
-        <Button type="submit" fullWidth size="lg" className="mt-8">
-          등록 완료
+        {error && <p className="mt-4 text-sm text-status-caution">{error}</p>}
+
+        <Button type="submit" fullWidth size="lg" className="mt-8" disabled={submitting}>
+          {submitting ? "등록 중..." : "등록 완료"}
         </Button>
       </form>
     </div>

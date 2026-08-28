@@ -34,7 +34,9 @@ export default function ReportPreviewPage({ params }: { params: Promise<{ caseId
         <Card className="mt-2 space-y-3">
           <div className="flex items-center justify-between border-b border-border pb-2">
             <div>
-              <p className="text-sm font-bold text-foreground">{childProfile.name} · {activeCase.bodyPart}</p>
+              <p className="text-sm font-bold text-foreground">
+                {childProfile?.name ?? "아이"} · {activeCase.bodyPart}
+              </p>
               <p className="text-xs text-muted">관찰 {activeCase.daysObserved}일째</p>
             </div>
             <TrendBadge status={activeCase.status} />
