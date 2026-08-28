@@ -10,6 +10,7 @@ import { outbreakEntries } from "@/lib/mock-data";
 import { getCase, listCases, type CaseSummary, type PhotoRecordWithSymptoms } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useChildProfile } from "@/lib/child-profile-context";
+import { PhotoThumb } from "@/components/ui/PhotoThumb";
 
 export default function HomePage() {
   const { user, accessToken } = useAuth();
@@ -125,7 +126,7 @@ export default function HomePage() {
             <Link href="/cases" className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
               {recentPhotos.map((p) => (
                 <div key={p.id} className="w-28 shrink-0 rounded-xl border border-border bg-surface p-2">
-                  <div className="h-20 w-full rounded-lg" style={{ backgroundColor: p.imageColor }} />
+                  <PhotoThumb photo={p} className="block h-20 w-full rounded-lg" />
                   <p className="mt-1.5 text-[11px] font-medium text-foreground">{p.takenAt.slice(5)}</p>
                   <p className="text-[11px] text-muted">면적 {p.areaRatio}%</p>
                 </div>

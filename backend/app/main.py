@@ -10,6 +10,8 @@ from app.apis.v1.auth_routers import auth_router
 from app.apis.v1.case_routers import case_router, record_router
 from app.apis.v1.child_routers import child_router
 from app.apis.v1.medical_routers import diagnosis_item_router, diagnosis_router
+from app.apis.v1.photo_routers import photo_router
+from app.apis.v1.report_routers import report_router
 from app.apis.v1.user_routers import user_router
 from app.core.config import config
 from app.core.db.database import engine
@@ -53,6 +55,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # 브라우저는 기본적으로 몇몇 표준 헤더만 자바스크립트에 보여준다.
+    # 리포트 PDF의 파일명이 Content-Disposition에 담겨 오므로 이것만 따로 열어준다.
+    expose_headers=["Content-Disposition"],
 )
 
 app.include_router(auth_router, prefix="/api/v1")
@@ -62,6 +67,8 @@ app.include_router(case_router, prefix="/api/v1")
 app.include_router(record_router, prefix="/api/v1")
 app.include_router(diagnosis_router, prefix="/api/v1")
 app.include_router(diagnosis_item_router, prefix="/api/v1")
+app.include_router(photo_router, prefix="/api/v1")
+app.include_router(report_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["health"])

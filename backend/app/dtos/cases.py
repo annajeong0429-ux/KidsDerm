@@ -79,6 +79,9 @@ class PhotoRecordResponse(BaseModel):
     case_id: int
     taken_at: datetime
     image_color: str
+    # 실제 사진이 올라와 있는지. True면 GET /photos/{id}/image 로 내려받을 수 있다.
+    # 사진 자체는 이 응답에 담지 않는다 - 목록 한 번에 이미지를 다 실어보내면 너무 무겁다.
+    has_image: bool
     area_ratio: float
     signs: FourSignsDto
     symptoms: SymptomResponse | None
@@ -90,6 +93,7 @@ class PhotoRecordResponse(BaseModel):
             case_id=photo.case_id,
             taken_at=photo.taken_at,
             image_color=photo.image_color,
+            has_image=photo.image_path is not None,
             area_ratio=photo.area_ratio,
             signs=FourSignsDto(
                 erythema=photo.erythema,

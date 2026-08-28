@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import photo_storage
 from app.core.config import config
 from app.dtos.cases import (
     CaseDetailResponse,
@@ -192,7 +193,12 @@ class CaseService:
         return self._summarize(case, photos)
 
     async def delete_case(self, session: AsyncSession, user_id: int, case_id: int) -> None:
-        """사례를 지우면 그 안의 사진·증상·진단·처방 기록도 DB가 함께 지운다(CASCADE)."""
+        """사례를 지우면 그 안의 사진·증상·진단·처방 기록도 DB가 함께 지운다(CASCADE).
+
+        다만 DB는 디스크에 있는 사진 파일까지 지워주지 않으므로, 행을 지우기 전에
+        파일 경로를 먼저 모아뒀다가 커밋이 끝난 뒤에 파일을 지운다."""
         case = await self._get_owned_or_404(session, user_id, case_id)
+        image_paths = await self.photo_repo.image_paths_for_case(session, case.id)
         await self.case_repo.delete(session, case)
         await session.commit()
+        photo_storage.delete_many(image_paths)

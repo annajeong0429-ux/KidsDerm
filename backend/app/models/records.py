@@ -9,9 +9,9 @@ from app.models.base import Base
 class PhotoRecord(Base):
     """한 번 촬영해서 나온 "측정" 결과. 사람이 판단한 값이 아니라 AI가 사진에서 뽑아낸 수치다.
 
-    [현재 범위] 실제 사진 파일은 아직 저장하지 않는다. 아동의 피부 사진은 민감정보라
-    암호화 저장소와 보관·파기 정책이 먼저 정해져야 해서, 지금은 프론트엔드가 쓰던
-    대표 색상(image_color)만 자리표시자로 저장한다.
+    실제 사진 파일은 DB가 아니라 암호화된 파일로 따로 저장하고(app/core/photo_storage.py),
+    여기에는 그 위치만 적어둔다. image_color는 사진을 아직 안 올렸을 때 목록·타임라인에
+    보여줄 대표 색상이다.
     """
 
     __tablename__ = "photo_records"
@@ -22,6 +22,10 @@ class PhotoRecord(Base):
     )
     taken_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     image_color: Mapped[str] = mapped_column(String(20), nullable=False)
+    # 암호화된 사진 파일의 상대 경로. 아직 사진을 안 올렸으면 None이다.
+    image_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    image_mime: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    image_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # 촬영 부위 면적 대비 병변이 차지하는 비율(%). 경과 그래프의 세로축이 이 값이다.
     area_ratio: Mapped[float] = mapped_column(Float, nullable=False)
     # [EASI 4징후] 아토피피부염 중증도를 재는 국제 표준 지표. 각 항목 0~3점 고정이며,

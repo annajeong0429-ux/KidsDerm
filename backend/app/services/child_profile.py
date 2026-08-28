@@ -3,7 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dtos.children import ChildProfileCreateRequest, ChildProfileUpdateRequest
 from app.models.child_profiles import ChildProfile
+from app.core import photo_storage
 from app.repositories.child_profile_repository import ChildProfileRepository
+from app.repositories.record_repository import PhotoRecordRepository
 
 # 한 보호자가 등록할 수 있는 아이 수 상한. 실수나 장난으로 무한정 만들어지는 걸 막는 안전장치다.
 MAX_CHILDREN_PER_USER = 10
@@ -12,6 +14,7 @@ MAX_CHILDREN_PER_USER = 10
 class ChildProfileService:
     def __init__(self):
         self.child_repo = ChildProfileRepository()
+        self.photo_repo = PhotoRecordRepository()
 
     async def list_children(self, session: AsyncSession, user_id: int) -> list[ChildProfile]:
         return await self.child_repo.list_by_user(session, user_id)
@@ -62,7 +65,10 @@ class ChildProfileService:
         return child
 
     async def delete_child(self, session: AsyncSession, user_id: int, child_id: int) -> None:
-        """아이를 지우면 그 아이의 사례·사진·증상 기록도 DB가 함께 지운다(CASCADE)."""
+        """아이를 지우면 그 아이의 사례·사진·증상 기록도 DB가 함께 지운다(CASCADE).
+        디스크의 사진 파일은 DB가 안 지우므로 경로를 먼저 챙겨뒀다가 따로 지운다."""
         child = await self.get_owned_or_404(session, user_id, child_id)
+        image_paths = await self.photo_repo.image_paths_for_child(session, child.id)
         await self.child_repo.delete(session, child)
         await session.commit()
+        photo_storage.delete_many(image_paths)

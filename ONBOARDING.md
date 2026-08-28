@@ -24,7 +24,7 @@ git에는 안 올라가 있던 기획 문서들을 이번에 `docs/`로 옮겨�
 - **4단계 브랜치**: `개인 브랜치` → `develop` (일상 통합) → `dev` (릴리즈 전 검증) → `main` (배포 가능 상태)
   - 처음엔 `main`/`develop`/개인 브랜치 3단계였는데, `develop→main` PR(#6)이 이미 머지된 뒤에 `dev`를 추가함 — 그래서 `dev`는 main과 같은 시점에서 새로 갈라져 나왔고, 이후 develop 작업은 `develop→dev` PR로 올라갑니다.
   - **새 작업은 절대 develop에 바로 커밋하지 말고 개인 브랜치를 파서 진행 후 develop으로 PR 주세요.** (지금까지는 혼자 작업이라 develop에 바로 커밋해왔지만, 팀원이 합류하면 이 규칙을 지켜야 충돌이 안 남)
-  - 지금 열려있는 PR: **#7 (develop → dev)** — 최신 develop 커밋까지 반영돼 있음, 아직 미머지.
+  - PR #7은 머지 완료. 이후 작업은 **PR #8 (develop → dev)** 로 올라가 있음.
 
 ---
 
@@ -41,12 +41,13 @@ kidsdermAI/                    # 프론트엔드 루트 (Next.js 16, App Router,
 │   │   └── ui/                  # Button, Card, Badge, Checkbox, IntensitySlider, Disclaimer 등
 │   └── lib/
 │       ├── types.ts             # 도메인 타입
-│       ├── mock-data.ts         # 백엔드 없는 도메인 데이터(사례·사진·진단 등) 전부 여기 목데이터
+│       ├── mock-data.ts         # 이제 유행정보만 목데이터(나머지는 서버에서 옴)
 │       ├── auth-context.tsx     # 실제 로그인 상태 관리 (백엔드 연동됨)
-│       ├── child-profile-context.tsx  # 아이 프로필 - 아직 백엔드 없어서 localStorage에 저장
+│       ├── api.ts               # 백엔드 호출을 모아둔 곳(snake_case <-> camelCase 변환도 여기서만)
+│       ├── child-profile-context.tsx  # 아이 프로필 - 서버 저장
 │       ├── record-context.tsx   # 촬영 흐름(RC) 다단계 상태 공유
 │       └── medical-context.tsx  # 진단·처방 입력(MD) 다단계 상태 공유
-├── backend/                   # FastAPI 인증 서버 (아래 5번 참고)
+├── backend/                   # FastAPI 서버 (인증 + 도메인 API, 아래 5번 참고)
 ├── docker-compose.yml         # web + backend + mysql 한 번에 기동
 └── scripts/screenshot.js      # Playwright로 화면 스크린샷 뜨는 개발용 스크립트
 ```
@@ -66,6 +67,7 @@ docker compose up -d
 **테스트 계정**: `consentcheck@example.com` / `Password123!` (테스트아이 프로필 등록돼 있음). 새로 회원가입해서 써도 됨.
 
 ### 알아두면 좋은 로컬 이슈
+- **DB 스키마 변경 주의**: 이 프로젝트에는 Alembic 같은 마이그레이션 도구가 없다. 서버가 켜질 때 `create_all`이 *없는 테이블만* 만들어 주고, **이미 있는 테이블에 컬럼을 추가해 주지는 않는다.** 모델에 컬럼을 추가했는데 `Unknown column ...` 오류가 나면 직접 `ALTER TABLE`을 실행해야 한다. DB를 처음부터 만드는 경우(`docker compose down -v`)에는 문제없다.
 - **컨테이너를 오래 띄워두다 파일을 새로 추가하면** Turbopack의 파일 감시가 가끔 안 먹어서 새 라우트가 404가 뜹니다 → `docker compose restart web`으로 해결됨. 기존 파일 **수정**은 대체로 핫리로드가 잘 됩니다.
 - 컨테이너 최초 기동 시 MySQL이 완전히 준비되기 전에 backend가 먼저 뜨려다 한 번 실패하는 경우가 있음 → `docker compose restart backend` 한 번이면 해결.
 
@@ -91,7 +93,7 @@ docker compose up -d
 `/analysis/outbreak-context`, `/analysis/next-visit`, `/cases/[caseId]/history*`, `/record/gallery`, `/record/done`.
 지울지 유지할지는 아직 안 정했습니다.
 
-### 백엔드: **인증만 실제로 동작, 나머지는 전부 미착수**
+### 백엔드: **인증 + 도메인 API 동작, AI·외부연동만 미착수**
 
 `backend/`는 팀에서 예전에 만든 **Re:medi**(`github.com/annajeong0429-ux/-Re-medi`)라는 다른 프로젝트의 로그인 모듈만 떼어와서 이식한 것입니다. 원본은 복약관리 앱이라 훨씬 큼 — 로그인/회원가입/JWT 부분만 가져오고 나머지(복약, 식단, 채팅 등)는 다 뺐습니다.
 
@@ -102,11 +104,18 @@ docker compose up -d
 2. 회원가입 시 약관/건강정보 동의 **시각**을 서버가 직접 찍어서 DB에 기록 (클라이언트 시각 안 믿음)
 3. 로그인/회원가입에 IP 기준 rate limiting (같은 IP로 로그인 10회/분, 가입 5회/분 초과 시 차단) — 계정 단위 잠금(5회 실패)과는 별개 방어선
 
-**안 되는 것 (전부 프론트엔드 목데이터로만 존재)**:
-- 병변 분할·분류·중증도 AI 모델 자체 — **이건 원래 이 저장소 범위가 아님**. 제안서 4.8절 기준으로 로컬 Jupyter Notebook에서 별도로 검증하는 트랙입니다. 웹앱 쪽은 항상 목데이터로 결과를 흉내내는 구조로 설계돼 있습니다.
-- 사진/증상/진단/처방/사례 데이터 저장 (전부 `src/lib/mock-data.ts`)
-- 아이 프로필 저장 (백엔드 없어서 브라우저 `localStorage`에만 있음 — `child-profile-context.tsx`)
-- 질병관리청 공공데이터 API 연동 (목데이터)
+**도메인 API도 동작함**: 아이 프로필 CRUD, 사례 조회/종료, 촬영 기록 저장, 진단·처방 저장, **사진 파일 업로드/조회**, **진료용 리포트 PDF 생성**.
+
+**사진 저장 방식**: 아동의 피부 사진은 민감정보라 파일을 그대로 두지 않고 **AES-256-GCM으로 암호화**해서 도커 볼륨(`/data/photos`)에 저장한다. 조회는 로그인한 본인만 가능한 API(`GET /photos/{id}/image`)를 거치며, 저장 경로는 API 응답에 노출하지 않는다. 사례·아이·계정을 지우면 **디스크의 사진 파일도 함께 지운다**(DB의 CASCADE는 파일까지 지워주지 않으므로 코드에서 따로 처리).
+암호화 키는 `PHOTO_ENCRYPTION_KEY`(base64 32바이트) 환경변수다. 운영에서 이 값이 없으면 서버가 아예 안 뜬다 — 키가 매번 바뀌면 어제 저장한 사진을 오늘 못 열기 때문이다.
+
+**리포트 PDF**: `GET /cases/{id}/report.pdf`. reportlab으로 A4 한 장을 만든다. 한글 출력을 위해 도커 이미지에 `fonts-nanum`을 설치해 둔다 — **글꼴이 없으면 한글이 전부 네모로 나온다.**
+
+**안 되는 것 (여전히 목데이터)**:
+- 병변 분할·분류·중증도 AI 모델 자체 — **이건 원래 이 저장소 범위가 아님**. 제안서 4.8절 기준으로 로컬 Jupyter Notebook에서 별도로 검증하는 트랙입니다.
+- `area_ratio`·EASI 4징후를 **클라이언트가 보내고 있음** — 모델 연동 시 반드시 서버 계산으로 옮겨야 함 (이슈 #10)
+- 질병관리청 공공데이터 API 연동 (이슈 #11)
+- 알림·리마인더 발송 로직
 
 **아직 해결 안 된 보안 백로그** (GitHub Issues #1~#5, `security` 라벨) — 실제 건강 데이터를 저장하기 시작하면 처리해야 함: 이메일 인증, 민감정보 필드 암호화, 보안 감사 로그, 2FA, 로그인 세션 목록/원격 로그아웃.
 
@@ -130,8 +139,10 @@ docker compose up -d
 
 ## 8. 다음에 할 일 후보
 
-- 백엔드에 실제 도메인 API(사진 업로드, 진단/처방 저장, 사례 조회) 붙이기 — 지금은 프론트가 전부 `mock-data.ts`를 봄
-- `child-profile-context`를 localStorage 대신 실제 백엔드로 이전
+- **이슈 #10 (보안, 우선)**: `area_ratio`·EASI를 서버 계산으로 이전 — 지금은 클라이언트가 보낸 의학적 수치를 그대로 믿는다
+- **이슈 #11**: 질병관리청 유행 정보 API 연동 — 화면에 이미 "출처: 질병관리청" 문구가 있는데 실제로는 목데이터라 문구가 사실과 다름
+- 알림·리마인더 발송 로직
 - 화면설계서에서 빠진 예전 화면들(알림 등) 정리 여부 결정
 - 보안 백로그 이슈 #1~#5 처리 (실 데이터 저장 시작 전 필수)
+- DB 마이그레이션 도구(Alembic) 도입 — 스키마 변경이 잦아지면 수동 `ALTER TABLE`은 곧 한계
 - Docker/네이티브 앱(Capacitor) 배포 방향 결정 — 아직 미정 상태로 보류 중

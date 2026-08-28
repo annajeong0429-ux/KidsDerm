@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useRecordFlow } from "@/lib/record-context";
 import { useAuth } from "@/lib/auth-context";
 import { useChildProfile } from "@/lib/child-profile-context";
-import { createRecord } from "@/lib/api";
+import { createRecord, uploadPhotoImage } from "@/lib/api";
 
 const ONSET_OPTIONS = ["오늘 처음", "2~3일 전", "1주 전", "2주 이상 전", "잘 모르겠어요", "기타"];
 const DISTRIBUTION_OPTIONS = [
@@ -24,6 +24,7 @@ export default function OnsetPage() {
     bodyPart,
     bodyPartDetail,
     photoColor,
+    photoFile,
     areaRatio,
     signs,
     symptoms,
@@ -48,10 +49,10 @@ export default function OnsetPage() {
     setSaving(true);
     setError("");
     try {
-      await createRecord(accessToken, childProfile.id, {
+      const created = await createRecord(accessToken, childProfile.id, {
         bodyPart: bodyPart ?? "기타",
         bodyPartDetail,
-        // 실제 사진 파일은 아직 저장하지 않는다 - 촬영 화면에서 고른 대표 색상만 넘긴다.
+        // 사진을 못 골랐을 때 목록·타임라인에 보여줄 대표 색상.
         imageColor: photoColor ?? "#e7cdb8",
         areaRatio,
         signs,
@@ -60,6 +61,17 @@ export default function OnsetPage() {
         onsetTimingDetail,
         distribution,
       });
+
+      // 사진은 기록이 만들어진 뒤에 따로 올린다. 사진 업로드가 실패하더라도
+      // 증상 기록 자체는 이미 저장됐으므로, 여기서 흐름을 막지 않고 알리기만 한다.
+      if (photoFile) {
+        try {
+          await uploadPhotoImage(accessToken, created.photo.id, photoFile);
+        } catch {
+          setError("증상 기록은 저장했지만 사진을 올리지 못했어요. 기록 상세에서 다시 시도해 주세요.");
+        }
+      }
+
       router.push("/record/done");
     } catch (e) {
       setError(e instanceof Error ? e.message : "저장에 실패했어요. 잠시 후 다시 시도해 주세요.");

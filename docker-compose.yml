@@ -22,9 +22,14 @@ services:
       - "8001:8000"
     volumes:
       - ./backend:/app
+      # 사진은 컨테이너를 지워도 남아야 하므로 별도 볼륨에 저장한다.
+      - photo_data:/data/photos
     environment:
       - ENV=local
       - SECRET_KEY=dev-only-secret-change-me
+      # 로컬 개발용 고정 키(base64 32바이트). 이게 있어야 서버를 다시 켜도 어제 사진이 열린다.
+      # 운영에서는 반드시 다른 값으로 바꾼다.
+      - PHOTO_ENCRYPTION_KEY=a2lkc2Rlcm0tbG9jYWwtZGV2LXBob3RvLWtleS0zMmI=
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_USER=root
@@ -55,3 +60,4 @@ volumes:
   node_modules:
   next_cache:
   mysql_data:
+  photo_data:

@@ -172,13 +172,18 @@ interface PhotoRecordDto {
   case_id: number;
   taken_at: string;
   image_color: string;
+  has_image: boolean;
   area_ratio: number;
   signs: { erythema: number; papulation: number; excoriation: number; lichenification: number };
   symptoms: SymptomDto | null;
 }
 
 /** 사진 기록에 그때 같이 적은 자가보고 증상을 붙인 것. */
-export type PhotoRecordWithSymptoms = PhotoRecord & { symptoms: SymptomEntry | null };
+export type PhotoRecordWithSymptoms = PhotoRecord & {
+  symptoms: SymptomEntry | null;
+  /** 실제 사진 파일이 올라와 있는지. true면 fetchPhotoImageUrl로 불러올 수 있다. */
+  hasImage: boolean;
+};
 
 function toPhotoRecord(dto: PhotoRecordDto, bodyPart: BodyPart): PhotoRecordWithSymptoms {
   return {
@@ -187,6 +192,7 @@ function toPhotoRecord(dto: PhotoRecordDto, bodyPart: BodyPart): PhotoRecordWith
     takenAt: dto.taken_at.slice(0, 10),
     bodyPart,
     imageColor: dto.image_color,
+    hasImage: dto.has_image,
     areaRatio: dto.area_ratio,
     signs: dto.signs,
     symptoms: dto.symptoms
@@ -371,4 +377,69 @@ export async function createDiagnosis(
     token,
   });
   return toDiagnosis(dto);
+}
+
+/* ---------------------------------- 사진 파일 ---------------------------------- */
+
+/** 촬영 기록에 실제 사진 파일을 올린다. 기록을 먼저 만든 뒤에 호출한다. */
+export async function uploadPhotoImage(token: string | null, photoId: string, file: File): Promise<void> {
+  const form = new FormData();
+  form.append("image", file);
+  // FormData를 보낼 때는 Content-Type을 직접 지정하면 안 된다 -
+  // 브라우저가 경계문자(boundary)를 포함해 알아서 붙여야 서버가 파싱할 수 있다.
+  const res = await fetch(`${API_BASE}/photos/${photoId}/image`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  if (!res.ok) {
+    let detail = "사진을 올리지 못했어요.";
+    try {
+      const parsed = await res.json();
+      if (typeof parsed.detail === "string") detail = parsed.detail;
+    } catch {
+      // 본문이 없으면 기본 문구를 쓴다.
+    }
+    throw new ApiError(res.status, detail);
+  }
+}
+
+/**
+ * 사진을 내려받아 화면에 띄울 수 있는 임시 주소로 바꿔준다.
+ *
+ * <img src="...">에 API 주소를 그대로 넣을 수 없다 - 사진 조회에는 로그인 토큰이
+ * 필요한데 img 태그는 Authorization 헤더를 붙여주지 못하기 때문이다.
+ * 그래서 직접 받아온 뒤 blob 주소로 만들어 넘긴다.
+ *
+ * 다 쓰고 나면 반드시 URL.revokeObjectURL()로 정리해야 메모리에 쌓이지 않는다.
+ */
+export async function fetchPhotoImageUrl(token: string | null, photoId: string): Promise<string> {
+  const res = await fetch(`${API_BASE}/photos/${photoId}/image`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ApiError(res.status, "사진을 불러오지 못했어요.");
+  return URL.createObjectURL(await res.blob());
+}
+
+/* ---------------------------------- 리포트 PDF ---------------------------------- */
+
+export type ReportSection = "photos" | "graph" | "symptoms" | "prescription";
+
+/** 진료용 리포트 PDF를 받아 파일과 파일명을 돌려준다. */
+export async function fetchReportPdf(
+  token: string | null,
+  caseId: string,
+  sections: ReportSection[],
+): Promise<{ blob: Blob; filename: string }> {
+  const query = sections.map((s) => `sections=${s}`).join("&");
+  const res = await fetch(`${API_BASE}/cases/${caseId}/report.pdf${query ? `?${query}` : ""}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ApiError(res.status, "리포트를 만들지 못했어요.");
+
+  // 서버가 Content-Disposition에 담아 보낸 파일명을 꺼내 쓴다.
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = /filename\*=UTF-8''([^;]+)/.exec(disposition);
+  const filename = match ? decodeURIComponent(match[1]) : "kidsderm-report.pdf";
+  return { blob: await res.blob(), filename };
 }

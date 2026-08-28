@@ -13,6 +13,7 @@ import {
   type PhotoRecordWithSymptoms,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { PhotoThumb } from "@/components/ui/PhotoThumb";
 
 type Event =
   | { type: "photo"; date: string; data: PhotoRecordWithSymptoms }
@@ -107,7 +108,7 @@ export default function CaseTimelinePage({ params }: { params: Promise<{ caseId:
               </span>
               {event.type === "photo" ? (
                 <div className="flex flex-1 items-center gap-3 rounded-xl border border-border bg-surface p-3">
-                  <span className="h-12 w-12 shrink-0 rounded-lg" style={{ backgroundColor: event.data.imageColor }} />
+                  <PhotoThumb photo={event.data} className="h-12 w-12 shrink-0 rounded-lg" />
                   <div>
                     <p className="text-xs font-semibold text-foreground">{event.date} · 촬영 기록</p>
                     <p className="mt-0.5 text-xs text-muted">면적 비율 {event.data.areaRatio}%</p>
