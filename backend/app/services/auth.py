@@ -5,12 +5,14 @@ from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from app.core import photo_storage
 from app.core.config import config
 from app.core.jwt.exceptions import TokenError
 from app.core.jwt.tokens import AccessToken, RefreshToken
 from app.core.utils.security import hash_password, verify_password
 from app.dtos.auth import LoginRequest, SignUpRequest
 from app.models.users import User
+from app.repositories.record_repository import PhotoRecordRepository
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.repositories.user_repository import UserRepository
 from app.services.jwt import JwtService
@@ -24,6 +26,7 @@ class AuthService:
     def __init__(self):
         self.user_repo = UserRepository()
         self.refresh_token_repo = RefreshTokenRepository()
+        self.photo_repo = PhotoRecordRepository()
         self.jwt_service = JwtService()
 
     async def signup(self, session: AsyncSession, data: SignUpRequest) -> User:
@@ -150,5 +153,10 @@ class AuthService:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="비밀번호가 올바르지 않습니다.")
         # else: 소셜 가입자 - 비밀번호 자체가 없으므로 검증 없이 진행
 
+        # 아이·사례·사진 기록은 DB가 함께 지우지만(CASCADE), 디스크의 사진 파일까지
+        # 지워주지는 않는다. 개인정보보호법상 탈퇴 시 지체없이 파기해야 하므로
+        # 경로를 먼저 모아뒀다가 계정 삭제가 끝난 뒤 파일도 반드시 지운다.
+        image_paths = await self.photo_repo.image_paths_for_user(session, user.id)
         await session.delete(user)
         await session.commit()
+        photo_storage.delete_many(image_paths)

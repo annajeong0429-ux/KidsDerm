@@ -22,7 +22,7 @@ export default function OutbreakPage() {
       <div className="flex-1 overflow-y-auto px-5 pb-6">
         <div className="flex items-center gap-1.5 text-xs text-muted">
           <MapPinIcon className="h-3.5 w-3.5" />
-          {childProfile.region.province} {childProfile.region.district}
+          {childProfile ? `${childProfile.region.province} ${childProfile.region.district}` : "지역 미설정"}
         </div>
         <p className="mt-0.5 text-[11px] text-muted">
           출처: 질병관리청 전수신고 감염병 발생현황 오픈API · 2026.08.14 06:00 기준 갱신

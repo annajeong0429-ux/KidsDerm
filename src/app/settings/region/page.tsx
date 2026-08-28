@@ -10,12 +10,36 @@ import { AuthGate } from "@/components/auth/AuthGate";
 const PROVINCES = ["대전광역시", "서울특별시", "경기도", "부산광역시", "대구광역시"];
 
 export default function RegionSettingsPage() {
-  const { childProfile, setChildProfile } = useChildProfile();
-  const [province, setProvince] = useState(childProfile.region.province);
-  const [district, setDistrict] = useState(childProfile.region.district);
+  const { childProfile, updateChild } = useChildProfile();
+  // 아이 정보는 서버에서 받아오므로 첫 렌더 때는 아직 없을 수 있다. 저장된 값을 상태로
+  // 복사해두는 대신, "사용자가 고친 값이 있으면 그것, 없으면 서버 값"으로 그때그때 정한다 -
+  // 이러면 아이 정보가 늦게 도착해도 입력칸이 알아서 채워진다.
+  const [editedProvince, setEditedProvince] = useState<string | null>(null);
+  const [editedDistrict, setEditedDistrict] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
-  function handleSave() {
-    setChildProfile({ ...childProfile, region: { province, district } });
+  const province = editedProvince ?? childProfile?.region.province ?? PROVINCES[0];
+  const district = editedDistrict ?? childProfile?.region.district ?? "";
+
+  async function handleSave() {
+    if (!childProfile) return;
+    setSaving(true);
+    setMessage("");
+    try {
+      await updateChild(childProfile.id, {
+        name: childProfile.name,
+        birthDate: childProfile.birthDate,
+        gender: childProfile.gender,
+        region: { province, district },
+        avatarColor: childProfile.avatarColor,
+      });
+      setMessage("저장했어요.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "저장에 실패했어요.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -31,7 +55,7 @@ export default function RegionSettingsPage() {
         <div className="grid grid-cols-2 gap-2">
           <select
             value={province}
-            onChange={(e) => setProvince(e.target.value)}
+            onChange={(e) => setEditedProvince(e.target.value)}
             className="h-12 rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500"
           >
             {PROVINCES.map((p) => (
@@ -40,7 +64,7 @@ export default function RegionSettingsPage() {
           </select>
           <input
             value={district}
-            onChange={(e) => setDistrict(e.target.value)}
+            onChange={(e) => setEditedDistrict(e.target.value)}
             placeholder="시군구"
             className="h-12 rounded-xl border border-border bg-surface px-4 text-sm outline-none focus:border-brand-500"
           />
@@ -53,8 +77,9 @@ export default function RegionSettingsPage() {
       </div>
 
       <div className="px-6 pb-6 pt-3">
-        <Button fullWidth size="lg" onClick={handleSave}>
-          저장
+        {message && <p className="mb-2 text-center text-sm text-muted">{message}</p>}
+        <Button fullWidth size="lg" onClick={handleSave} disabled={saving || !childProfile}>
+          {saving ? "저장 중..." : "저장"}
         </Button>
       </div>
     </div>

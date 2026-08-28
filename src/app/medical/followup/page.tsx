@@ -1,14 +1,68 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Button } from "@/components/ui/Button";
 import { useMedicalFlow } from "@/lib/medical-context";
+import { useAuth } from "@/lib/auth-context";
+import { createDiagnosis } from "@/lib/api";
 
 export default function FollowupSchedulePage() {
   const router = useRouter();
-  const { nextVisitDate, setNextVisitDate, reminderCycleDays, setReminderCycleDays, reminderOn, setReminderOn } =
-    useMedicalFlow();
+  const { accessToken } = useAuth();
+  const {
+    caseId,
+    visitDate,
+    hospitalName,
+    diagnosisName,
+    medicationName,
+    form,
+    durationDays,
+    note,
+    nextVisitDate,
+    setNextVisitDate,
+    reminderCycleDays,
+    setReminderCycleDays,
+    reminderOn,
+    setReminderOn,
+  } = useMedicalFlow();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSave() {
+    if (!caseId) {
+      setError("어느 사례에 대한 진료인지 먼저 선택해 주세요.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await createDiagnosis(accessToken, caseId, {
+        visitDate,
+        hospitalName,
+        diagnosisName,
+        // 약 이름을 안 적었으면 처방 없이 진단만 저장한다(진료만 받고 약은 안 받는 경우도 있다).
+        prescriptions: medicationName.trim()
+          ? [
+              {
+                medicationName,
+                form,
+                durationDays,
+                note,
+                nextVisitDate,
+                reminderCycleDays,
+                reminderOn,
+              },
+            ]
+          : [],
+      });
+      router.push(`/cases/${caseId}/timeline`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "저장에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -61,8 +115,9 @@ export default function FollowupSchedulePage() {
       </div>
 
       <div className="px-6 pb-6 pt-3">
-        <Button fullWidth size="lg" disabled={!nextVisitDate} onClick={() => router.push("/cases/case-1/timeline")}>
-          저장하고 경과 보기
+        {error && <p className="mb-2 text-center text-sm text-status-caution">{error}</p>}
+        <Button fullWidth size="lg" disabled={!nextVisitDate || saving} onClick={handleSave}>
+          {saving ? "저장 중..." : "저장하고 경과 보기"}
         </Button>
       </div>
     </div>

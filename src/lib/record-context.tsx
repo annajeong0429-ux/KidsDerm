@@ -14,6 +14,9 @@ interface RecordFlowState {
   setBodyPartDetail: (v: string) => void;
   photoColor: string | null;
   setPhotoColor: (c: string) => void;
+  // 촬영 화면에서 고른 실제 사진 파일. 기록을 저장한 뒤에 서버로 올린다.
+  photoFile: File | null;
+  setPhotoFile: (f: File | null) => void;
   areaRatio: number;
   signs: SeaseFourSigns;
   symptoms: SymptomEntry;
@@ -48,6 +51,7 @@ export function RecordFlowProvider({ children }: { children: ReactNode }) {
   const [bodyPart, setBodyPart] = useState<BodyPartSelection | null>(null);
   const [bodyPartDetail, setBodyPartDetail] = useState("");
   const [photoColor, setPhotoColor] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [symptoms, setSymptoms] = useState<SymptomEntry>(defaultSymptoms);
   const [onsetTiming, setOnsetTiming] = useState("");
   const [onsetTimingDetail, setOnsetTimingDetail] = useState("");
@@ -62,6 +66,8 @@ export function RecordFlowProvider({ children }: { children: ReactNode }) {
         setBodyPartDetail,
         photoColor,
         setPhotoColor,
+        photoFile,
+        setPhotoFile,
         areaRatio: MOCK_AREA_RATIO,
         signs: MOCK_SIGNS,
         symptoms,

@@ -43,6 +43,15 @@ class Config(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 14 * 24 * 60
     JWT_LEEWAY: int = 5
 
+    # [사진 저장] 촬영 이미지는 DB가 아니라 파일로 저장한다(용량이 크고 DB 백업을 무겁게 만든다).
+    # 도커 볼륨을 여기에 붙여서 컨테이너를 지워도 사진이 남게 한다.
+    PHOTO_STORAGE_DIR: str = "/data/photos"
+    # 아동의 피부 사진은 민감정보라 파일을 그대로 두지 않고 암호화해서 저장한다.
+    # 32바이트 키를 base64로 넣는다. 비워두면 로컬 개발용 임시 키가 자동 생성된다.
+    PHOTO_ENCRYPTION_KEY: str = ""
+    # 업로드 상한. 요즘 휴대폰 사진이 5MB 안팎이라 10MB면 충분하다.
+    PHOTO_MAX_BYTES: int = 10 * 1024 * 1024
+
     # 소셜 로그인 콜백 처리가 끝나면 이 주소(프론트엔드)로 돌려보낸다.
     FRONTEND_URL: str = "http://localhost:3000"
 
@@ -73,4 +82,10 @@ if config.ENV == Env.PROD:
     if len(config.SECRET_KEY) < 32:
         raise RuntimeError(
             f"SECRET_KEY가 너무 짧습니다({len(config.SECRET_KEY)}자). 32자 이상의 무작위 문자열을 사용하세요."
+        )
+    # 사진 암호화 키도 마찬가지다. 키가 없으면 서버를 켤 때마다 임시 키가 새로 생겨서,
+    # 어제 저장한 사진을 오늘 못 여는 상황이 된다 - 운영에서는 반드시 고정된 키를 준다.
+    if not config.PHOTO_ENCRYPTION_KEY:
+        raise RuntimeError(
+            "PHOTO_ENCRYPTION_KEY가 설정되지 않았습니다. 운영 환경(.env)에 32바이트 키를 base64로 넣어주세요."
         )
